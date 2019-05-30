@@ -227,6 +227,7 @@ export default {
                   }
                   this.currentTime = position;
                 }
+                //当标题不一样时，更新设置
                 this.setCurrentIndex(attr.index);
                 this.setPlaying(isPlaying);
                 //设置自动高度

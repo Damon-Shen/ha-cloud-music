@@ -60,7 +60,7 @@ window.clv = {
       o.state = _clv.state
       o.call = (service_data, service = 'play_media', domain = 'media_player') => {
         conn.socket.send(JSON.stringify({
-          id: conn.commandId + 1,
+          id: Date.now(),
           type: "call_service",
           domain,
           service,
