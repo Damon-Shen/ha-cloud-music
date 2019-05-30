@@ -118,29 +118,15 @@ export default {
     MmProgress
   },
   data() {
-    let musicReady = false,
-      volume = 1;
-    let attr = window.cloudMusic.attr;
-    if (attr) {
-      musicReady = attr.isPlaying;
-      volume = attr.volume_level || 1;
-      //console.log(musicReady,volume);
-      if (attr.playlist.length > 0) {
-        this.$nextTick(() => {
-          this._getLyric(attr.playlist[attr.index].id);
-        });
-      }
-    }
-
     return {
-      musicReady: musicReady, // 是否可以使用播放器
+      musicReady: false, // 是否可以使用播放器
       currentTime: 0, // 当前播放时间
       currentProgress: 0, // 当前缓冲进度
       lyric: [], // 歌词
       nolyric: false, // 是否有歌词
       lyricIndex: 0, // 当前播放歌词下标
       isMute: false, // 是否静音
-      volume: volume // 默认音量大小
+      volume: 1 // 默认音量大小
     };
   },
   computed: {
@@ -219,24 +205,62 @@ export default {
     }
   },
   mounted() {
-    this.$nextTick(() => {
-      mmPlayerMusic.initAudio(this);
-      let timer = null;
-      setInterval(() => {
-        if (timer != null) clearInterval(timer);
-        let attr = window.cloudMusic.attr;
-        if (attr && attr.isPlaying) {
-          let media_position = attr["media_position"] + 1;
-          timer = setInterval(() => {
-            media_position += 1;
-            this.currentTime = media_position;
-          }, 1000);
+    window.clv.hass
+      .then(({ attr, isPlaying, isReady }) => {
+        this.musicReady = isReady;
+        this.volume = attr.volume_level || 1;
+        if (attr.playlist.length > 0) {
+          this.$nextTick(() => {
+            this._getLyric(attr.playlist[attr.index].id);
+            //歌词进度条
+            let media_position = Math.ceil(attr.media_position);
+            let position = media_position;
+            setInterval(() => {
+              window.clv.hass.then(({ attr, isPlaying }) => {
+                if (isPlaying) {
+                  let _media_position = Math.ceil(attr.media_position);
+                  //时间还未更新时+1
+                  if (media_position != _media_position) {
+                    position = media_position = _media_position;
+                  } else {
+                    position += 1;
+                  }
+                  this.currentTime = position;
+                }
+                this.setCurrentIndex(attr.index);
+                this.setPlaying(isPlaying);
+                //设置自动高度
+                let dom = this.getDOM();
+              });
+            }, 1000);
+          });
         }
-      }, 12000);
-      this.initKeyDown();
-    });
+      })
+      .finally(() => {
+        this.$nextTick(() => {
+          mmPlayerMusic.initAudio(this);
+          this.initKeyDown();
+        });
+      });
   },
   methods: {
+    getDOM() {
+      try {
+        let ha_card = top.document.body
+          .querySelector("home-assistant")
+          .shadowRoot.querySelector("home-assistant-main")
+          .shadowRoot.querySelector("ha-panel-lovelace")
+          .shadowRoot.querySelector("hui-root")
+          .shadowRoot.querySelector("#view hui-iframe-card")
+          .shadowRoot.querySelector("ha-card");
+        //console.log(ha_card)
+        ha_card.style = "height:calc(100vh - 112px)";
+        let root = ha_card.querySelector("#root");
+        root.style = "height:100%; padding-top:0;";
+      } catch (ex) {
+        //console.log(ex);
+      }
+    },
     // 按键事件
     initKeyDown() {
       document.onkeydown = e => {
@@ -272,7 +296,7 @@ export default {
     },
     // 上一曲
     prev() {
-      window.cloudMusic.exec({ cmd: "prev" });
+      window.clv.exec({ cmd: "prev" });
       if (!this.musicReady) {
         return;
       }
@@ -291,7 +315,7 @@ export default {
     },
     // 播放暂停
     play() {
-      window.cloudMusic.exec({ cmd: this.playing ? "pause" : "play" });
+      window.clv.exec({ cmd: this.playing ? "pause" : "play" });
       if (!this.musicReady) {
         return;
       }
@@ -299,7 +323,7 @@ export default {
     },
     // 下一曲
     next() {
-      window.cloudMusic.exec({ cmd: "next" });
+      window.clv.exec({ cmd: "next" });
       if (!this.musicReady) {
         return;
       }
@@ -377,7 +401,7 @@ export default {
     // 修改音量大小
     volumeChange(percent) {
       percent === 0 ? (this.isMute = true) : (this.isMute = false);
-      window.cloudMusic.setVolume(percent);
+      window.clv.setVolume(percent);
       this.volume = percent;
       this.audioEle.volume = percent;
     },
