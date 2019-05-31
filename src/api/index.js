@@ -140,9 +140,9 @@ export function getFmList({ id, page, size }) {
             duration: ele.audience_count,
             id: ele.content_id,
             image: ele.cover,
-            name: ele.nowplaying.title,
+            name: (ele.nowplaying && ele.nowplaying.title) || ele.title,
             singer: ele.title,
-            url: `http://lhttp.qingting.fm/live/${ele.content_id}/64k.mp3`
+            clv_url: `http://lhttp.qingting.fm/live/${ele.content_id}/64k.mp3`
           })
         })
 

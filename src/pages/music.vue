@@ -236,8 +236,8 @@ export default {
             }, 1000);
           });
         }
-        
-         this.setDOM();
+
+        this.setDOM();
       })
       .finally(() => {
         this.$nextTick(() => {
@@ -421,8 +421,13 @@ export default {
           if (res.data.nolyric) {
             this.nolyric = true;
           } else {
-            this.nolyric = false;
-            this.lyric = parseLyric(res.data.lrc.lyric);
+            if (res.data.lrc) {
+              this.nolyric = false;
+              this.lyric = parseLyric(res.data.lrc.lyric);
+            } else {
+              this.nolyric = true;
+              this.lyric = [];
+            }
           }
           //this.audioEle.play();
         }

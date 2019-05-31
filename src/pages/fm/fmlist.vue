@@ -5,7 +5,14 @@
     <music-list
       :list="list"
       @select="selectItem"
-    />
+    >
+      <div
+        slot="listBtn"
+        class="list-btn"
+      >
+        <span @click="loadMore">加载更多</span>
+      </div>
+    </music-list>
   </div>
 </template>
 
@@ -26,18 +33,30 @@ export default {
   },
   data() {
     return {
-      list: [] // 列表
+      list: [], // 列表
+      id: "",
+      page: 1,
+      size: 12,
+      isEnd: false
     };
   },
-  created() {
-    // 获取歌单详情
-    getFmList({ id: this.$route.params.id }).then(res => {
-      console.log(res);
-      this.list = res.list;
-      this._hideLoad();
-    });
+  mounted() {
+    this.id = this.$route.params.id;
+    this.loadMore();
   },
   methods: {
+    loadMore() {
+      if (this.isEnd) return;
+      this.mmLoadShow = true;
+      // 获取歌单详情
+      getFmList({ id: this.id, page: this.page }).then(res => {
+        //console.log(res);
+        Array.prototype.push.apply(this.list, res.list);
+        this._hideLoad();
+        this.page += 1;
+        if (this.list.length >= res.total) this.isEnd = true;
+      });
+    },
     // 播放暂停事件
     selectItem(item, index) {
       this.selectPlay({
@@ -58,6 +77,20 @@ export default {
   .musicList {
     width: 100%;
     height: 100%;
+    .list-btn {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 50px;
+      span {
+        padding: 5px 20px;
+        cursor: pointer;
+        user-select: none;
+        &:hover {
+          color: @text_color_active;
+        }
+      }
+    }
   }
 }
 </style>
