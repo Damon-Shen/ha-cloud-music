@@ -21,7 +21,7 @@ export const setPlaylist = function ({ commit }, { list }) {
 
 // 选择播放（会更新整个播放列表）
 export const selectPlay = function ({ commit }, { list, index }) {
-
+  
   window.clv.loadlist(list,index)
 
   commit(types.SET_PLAYLIST, list)

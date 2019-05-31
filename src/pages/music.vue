@@ -231,11 +231,13 @@ export default {
                 this.setCurrentIndex(attr.index);
                 this.setPlaying(isPlaying);
                 //设置自动高度
-                let dom = this.getDOM();
+                this.setDOM();
               });
             }, 1000);
           });
         }
+        
+         this.setDOM();
       })
       .finally(() => {
         this.$nextTick(() => {
@@ -245,7 +247,7 @@ export default {
       });
   },
   methods: {
-    getDOM() {
+    setDOM() {
       try {
         let ha_card = top.document.body
           .querySelector("home-assistant")
